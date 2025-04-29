@@ -1,403 +1,460 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Riichi Mahjong Demo – Defesa & Autoplay</title>
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<style>
-:root{--gap:.4rem;--radius:1rem;--shadow:0 4px 6px rgb(0 0 0 /.1);font-family:system-ui,sans-serif}
-body{margin:0;background:#f8f9fa;padding:1rem}
-#bgImage{position:fixed;bottom:0;right:0;z-index:10000;pointer-events:none}
-h1{text-align:center;margin:0 0 1rem}
-p.description{text-align:center;max-width:800px;margin:0 auto 1.5rem;color:#333;font-size:1rem;line-height:1.4}
-#table{display:grid;grid-template-rows:repeat(4,auto);gap:var(--gap);max-width:1200px;margin:0 auto}
-.player{background:#fff;border-radius:var(--radius);padding:.6rem 1rem;box-shadow:var(--shadow);transition:transform .2s}
-.winner{border:3px solid #16a34a;transform:scale(1.04)}
-.row{display:flex;flex-wrap:wrap;align-items:center;gap:.2rem}
-.meld{margin-left:.6rem;padding-left:.4rem;border-left:2px solid #e2e8f0}
-.discards{border-top:1px dashed #cbd5e1;padding-top:.25rem;margin-top:.25rem}
-.tile{font-family:"Noto Sans Symbols 2","Segoe UI Symbol","Apple Color Emoji",sans-serif;font-size:2rem;display:inline-block}
-.rot{transform:rotate(90deg)}
-.sm{font-size:1.6rem;opacity:.85}
-.riichi-tag{color:#dc2626;font-weight:700;margin-left:.4rem}
-.role{font-size:.75rem;padding:.1rem .4rem;border-radius:.4rem;background:#e2e8f0;margin-left:.4rem}
-.def{background:#c7d2fe}
-.off{background:#fee2e2}
-#controls{text-align:center;margin:1.5rem auto;display:flex;flex-wrap:wrap;justify-content:center;gap:.8rem}
-button{border:0;border-radius:.5rem;box-shadow:var(--shadow);background:#4f46e5;color:#fff;padding:.5rem 1.6rem;font-size:1rem;cursor:pointer}
-button:disabled{background:#9ca3af;cursor:not-allowed}
-#log{display:none;max-width:1200px;margin:.5rem auto;height:24rem;background:#fff;border-radius:.6rem;box-shadow:var(--shadow);padding:.8rem 1rem;font:.9rem/1.3 monospace;white-space:pre-wrap;overflow-y:auto}
-</style>
+  <meta charset="UTF-8" />
+  <title>Riichi Mahjong Demo – Defesa & Autoplay</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root { --gap:.4rem; --radius:1rem; --shadow:0 4px 6px rgb(0 0 0 /.1); font-family:system-ui,sans-serif }
+    body { margin:0; background:#f8f9fa; padding:1rem }
+    #bgImage { position:fixed; bottom:0; right:0; z-index:10000; pointer-events:none }
+    h1 { text-align:center; margin:0 0 1rem }
+    p.description { text-align:center; max-width:800px; margin:0 auto 1.5rem; color:#333; font-size:1rem; line-height:1.4 }
+    #table { display:grid; grid-template-rows:repeat(4,auto); gap:var(--gap); max-width:1200px; margin:0 auto }
+    .player { background:#fff; border-radius:var(--radius); padding:.6rem 1rem; box-shadow:var(--shadow); transition:transform .2s }
+    .winner { border:3px solid #16a34a; transform:scale(1.04) }
+    .row { display:flex; flex-wrap:wrap; align-items:center; gap:.2rem }
+    .meld { margin-left:.6rem; padding-left:.4rem; border-left:2px solid #e2e8f0 }
+    .discards { border-top:1px dashed #cbd5e1; padding-top:.25rem; margin-top:.25rem }
+    .tile { font-family:"Noto Sans Symbols 2","Segoe UI Symbol","Apple Color Emoji",sans-serif; font-size:2rem; display:inline-block }
+    .rot { transform:rotate(90deg) }
+    .sm { font-size:1.6rem; opacity:.85 }
+    .riichi-tag { color:#dc2626; font-weight:700; margin-left:.4rem }
+    .role { font-size:.75rem; padding:.1rem .4rem; border-radius:.4rem; background:#e2e8f0; margin-left:.4rem }
+    .def { background:#c7d2fe }
+    .off { background:#fee2e2 }
+    #controls { text-align:center; margin:1.5rem auto; display:flex; flex-wrap:wrap; justify-content:center; gap:.8rem }
+    button { border:0; border-radius:.5rem; box-shadow:var(--shadow); background:#4f46e5; color:#fff; padding:.5rem 1.6rem; font-size:1rem; cursor:pointer }
+    button:disabled { background:#9ca3af; cursor:not-allowed }
+    #log { display:none; max-width:1200px; margin:.5rem auto; height:24rem; background:#fff; border-radius:.6rem; box-shadow:var(--shadow); padding:.8rem 1rem; font:.9rem/1.3 monospace; white-space:pre-wrap; overflow-y:auto }
+  </style>
 </head>
 <body>
-<img id="bgImage" src="background.png" alt="" />
-<h1>NineFlowers 🀐 Mahjong Algorítmico</h1>
-<p class="description">
-O algoritmo de descartes equilibra defensiva e ofensiva para manter o jogador em tenpai:
-<ul style="list-style:disc;margin:0.5rem 0 0 1.2rem;text-align:left;max-width:600px;margin-left:auto;margin-right:auto;">
-<li>Com Riichi ativo, jogadores defensivos priorizam genbutsu e suji para evitar perigos;</li>
-<li>Em mãos ofensivas, simula cada descarte calculando o Shanten restante e o Ukeire potencial, escolhendo o que minimiza o Shanten e maximiza o Ukeire.</li>
-</ul>
-</p>
+  <img id="bgImage" src="background.png" alt="" />
+  <link rel="shortcut icon" src="Sou1.ico">
+  <h1>NineFlowers 🀐 Mahjong Algorítmico</h1>
+  <p class="description">
+    O algoritmo de descartes equilibra defensiva e ofensiva para manter o jogador em tenpai:
+    <ul style="list-style:disc;margin:0.5rem 0 0 1.2rem;text-align:left;max-width:600px;margin-left:auto;margin-right:auto;">
+      <li>Com Riichi ativo, jogadores defensivos priorizam genbutsu e suji para evitar perigos;</li>
+      <li>Em mãos ofensivas, simula cada descarte calculando o Shanten restante e o Ukeire potencial, escolhendo o que minimiza o Shanten e maximiza o Ukeire.</li>
+    </ul>
+  </p>
 
-<div id="table"></div>
+  <div id="table"></div>
 
-<div id="controls">
-  <button id="next">Próximo turno</button>
-  <button id="auto">Autoplay ▶</button>
-  <button id="reset">Reset</button>
-  <button id="simulate">Simular 10000 jogos</button>
-</div>
+  <div id="controls">
+    <button id="next">Próximo turno</button>
+    <button id="auto">Autoplay ▶</button>
+    <button id="reset">Reset</button>
+    <button id="simulate">Simular 5k jogos</button>
+  </div>
+  
 
-<pre id="log"></pre>
+  <pre id="log"></pre>
 
-<script>
-/* ---------- CONSTANTES ---------- */
-const U=[..."\u{1F007}\u{1F008}\u{1F009}\u{1F00A}\u{1F00B}\u{1F00C}\u{1F00D}\u{1F00E}\u{1F00F}\u{1F019}\u{1F01A}\u{1F01B}\u{1F01C}\u{1F01D}\u{1F01E}\u{1F01F}\u{1F020}\u{1F021}\u{1F010}\u{1F011}\u{1F012}\u{1F013}\u{1F014}\u{1F015}\u{1F016}\u{1F017}\u{1F018}\u{1F000}\u{1F001}\u{1F002}\u{1F003}\u{1F006}\u{1F005}\u{1F004}"];
-const WAITS=["ryanmen","kanchan","penchan","shanpon","tanki"];
+  <script>
+    /* ---------- CONSTANTES ---------- */
+    const U = [..."\u{1F007}\u{1F008}\u{1F009}\u{1F00A}\u{1F00B}\u{1F00C}\u{1F00D}\u{1F00E}\u{1F00F}\u{1F019}\u{1F01A}\u{1F01B}\u{1F01C}\u{1F01D}\u{1F01E}\u{1F01F}\u{1F020}\u{1F021}\u{1F010}\u{1F011}\u{1F012}\u{1F013}\u{1F014}\u{1F015}\u{1F016}\u{1F017}\u{1F018}\u{1F000}\u{1F001}\u{1F002}\u{1F003}\u{1F006}\u{1F005}\u{1F004}"];
+    const WAITS = ["ryanmen","kanchan","penchan","shanpon","tanki"];
 
-/* ---------- UTILIDADES ---------- */
-const span=(t,{rot=false,sm=false}={})=>`<span class="tile${rot?" rot":""}${sm?" sm":""}">${U[t]}</span>`;
-const key=a=>a.join("");
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
-function isSuji(t){if(t>=27) return true; const r=t%9+1; return r===1||r===4||r===7;}
+    /* ---------- UTILIDADES ---------- */
+    const span = (t,{rot=false,sm=false}={}) => `<span class="tile${rot?" rot":""}${sm?" sm":""}">${U[t]}</span>`;
+    const key  = a => a.join("");
+    function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
 
-/* ---------- AVALIAÇÃO DE MÃO ---------- */
-const M1=new Map(),M2=new Map();
-function suitDFS(c){
-    const k=key(c); if(M1.has(k)) return M1.get(k);
-    let best=[0,0]; const up=(m,t)=>{if(m>best[0]||m===best[0]&&t>best[1]) best=[m,t]};
-    let i=c.findIndex(x=>x); if(i<0) return M1.set(k,best),best;
-    if(c[i]>=3){c[i]-=3;const[r,s]=suitDFS(c);up(r+1,s);c[i]+=3}
-    if(i<=6&&c[i]&&c[i+1]&&c[i+2]){c[i]--;c[i+1]--;c[i+2]--;const[r,s]=suitDFS(c);up(r+1,s);c[i]++;c[i+1]++;c[i+2]++;}
-    if(c[i]>=2){c[i]-=2;const[r,s]=suitDFS(c);up(r,s+1);c[i]+=2}
-    if(i<=7&&c[i]&&c[i+1]){c[i]--;c[i+1]--;const[r,s]=suitDFS(c);up(r,s+1);c[i]++;c[i+1]++;}
-    if(i<=6&&c[i]&&c[i+2]){c[i]--;c[i+2]--;const[r,s]=suitDFS(c);up(r,s+1);c[i]++;c[i+2]++;}
-    const sv=c[i];c[i]=0;const[r,s]=suitDFS(c);up(r,s);c[i]=sv;
-    return M1.set(k,best),best;
-}
-function honorDFS(c){
-    const k=key(c); if(M2.has(k)) return M2.get(k);
-    let best=[0,0]; const up=(m,t)=>{if(m>best[0]||m===best[0]&&t>best[1]) best=[m,t]};
-    let i=c.findIndex(x=>x); if(i<0) return M2.set(k,best),best;
-    if(c[i]>=3){c[i]-=3;const[r,s]=honorDFS(c);up(r+1,s);c[i]+=3}
-    if(c[i]>=2){c[i]-=2;const[r,s]=honorDFS(c);up(r,s+1);c[i]+=2}
-    c[i]--;const[r,s]=honorDFS(c);up(r,s);c[i]++;
-    return M2.set(k,best),best;
-}
-function stdShanten(ct){
-    const meldTa=C=>{
-        let m=0,t=0;
-        for(const b of[0,9,18]){const[r,s]=suitDFS(C.slice(b,b+9));m+=r;t+=s}
-        const[r2,s2]=honorDFS(C.slice(27));
-        return [m+r2,t+s2];
-    };
-    let min=8;
-    for(let i=0;i<34;i++) if(ct[i]>=2){
-        ct[i]-=2;const[m,t]=meldTa(ct);ct[i]+=2;
-        min=Math.min(min,8-2*m-Math.min(t,4-m)-1);
+    /* ---------- CÁLCULO DE SHANTEN & UKEIRE ---------- */
+    function isSuji(t){
+      if(t>=27) return true;
+      const r = t%9 + 1;
+      return r===1 || r===4 || r===7;
     }
-    const[m,t]=meldTa(ct);
-    return Math.min(min,8-2*m-Math.min(t,4-m));
-}
-function ukeire(ct,sh){
-    let u=0;
-    for(let i=0;i<34;i++){
+    const M1 = new Map(), M2 = new Map();
+    function suitDFS(c){
+      const k = key(c);
+      if(M1.has(k)) return M1.get(k);
+      let best = [0,0];
+      const up = (m,t) => { if(m>best[0]||m===best[0]&&t>best[1]) best=[m,t]; };
+      let i = c.findIndex(x=>x);
+      if(i<0) return M1.set(k,best), best;
+      if(c[i]>=3){ c[i]-=3; const [r,s]=suitDFS(c); up(r+1,s); c[i]+=3; }
+      if(i<=6&&c[i]&&c[i+1]&&c[i+2]){ c[i]--;c[i+1]--;c[i+2]--; const [r,s]=suitDFS(c); up(r+1,s); c[i]++;c[i+1]++;c[i+2]++; }
+      if(c[i]>=2){ c[i]-=2; const [r,s]=suitDFS(c); up(r,s+1); c[i]+=2; }
+      if(i<=7&&c[i]&&c[i+1]){ c[i]--;c[i+1]--; const [r,s]=suitDFS(c); up(r,s+1); c[i]++;c[i+1]++; }
+      if(i<=6&&c[i]&&c[i+2]){ c[i]--;c[i+2]--; const [r,s]=suitDFS(c); up(r,s+1); c[i]++;c[i+2]++; }
+      const sv=c[i]; c[i]=0; const [r,s]=suitDFS(c); up(r,s); c[i]=sv;
+      return M1.set(k,best), best;
+    }
+    function honorDFS(c){
+      const k = key(c);
+      if(M2.has(k)) return M2.get(k);
+      let best=[0,0];
+      const up = (m,t) => { if(m>best[0]||m===best[0]&&t>best[1]) best=[m,t]; };
+      let i=c.findIndex(x=>x);
+      if(i<0) return M2.set(k,best), best;
+      if(c[i]>=3){ c[i]-=3; const [r,s]=honorDFS(c); up(r+1,s); c[i]+=3; }
+      if(c[i]>=2){ c[i]-=2; const [r,s]=honorDFS(c); up(r,s+1); c[i]+=2; }
+      c[i]--; const [r,s]=honorDFS(c); up(r,s); c[i]++;
+      return M2.set(k,best), best;
+    }
+    function stdShanten(ct){
+      const meldTa = C => {
+        let m=0,t=0;
+        for(const b of [0,9,18]){ const [r,s] = suitDFS(C.slice(b,b+9)); m+=r; t+=s; }
+        const [r2,s2] = honorDFS(C.slice(27));
+        return [m+r2, t+s2];
+      };
+      let min=8;
+      for(let i=0;i<34;i++) if(ct[i]>=2){
+        ct[i]-=2; const [m,t]=meldTa(ct); ct[i]+=2;
+        min = Math.min(min, 8-2*m-Math.min(t,4-m)-1);
+      }
+      const [m,t] = meldTa(ct);
+      return Math.min(min, 8-2*m-Math.min(t,4-m));
+    }
+    function ukeire(ct,sh){
+      let u=0;
+      for(let i=0;i<34;i++){
         if(!wc[i]) continue;
         ct[i]++; if(stdShanten(ct)<sh) u+=wc[i]; ct[i]--;
+      }
+      return u;
     }
-    return u;
-}
 
-/* ---------- CLASSIFICAÇÃO DE ESPERA ---------- */
-function classifyWait(ht, tile){
-    const c = [...Array(34)].map((_,i)=>ht.filter(x=>x===i).length);
-    // Tanki: completou par
-    if(c[tile]===2) return "tanki";
-    // Shanpon: completou tripla
-    if(c[tile]===3) return "shanpon";
-    // Para sequências:
-    if(tile>=27) return "tanki"; // Honores só podem ser tanki ou shanpon (já tratado)
-    const s = tile%9+1, base = tile - (s-1);
-    // ryanmen
-    if(s>=2 && s<=8 && c[tile-1] && c[tile+1]) return "kanchan"; // middle wait 観音
-    if((s===3||s===7) && c[tile-1] && c[tile-2]) return "penchan"; // edge
-    if((s===1||s===4||s===7) && c[tile+1] && c[tile+2]) return "penchan";
-    // ryanmen open
-    if((s>=2 && s<=8) && ( (c[tile-1] && !c[tile-2] && c[tile+1]) || (c[tile+1] && !c[tile+2] && c[tile-1]) ))
+    /* ---------- CLASSIFICAÇÃO DE ESPERA ---------- */
+    function classifyWait(ht, tile){
+      const c=[...Array(34)].map((_,i)=>ht.filter(x=>x===i).length);
+      if(c[tile]===2) return "tanki";
+      if(c[tile]===3) return "shanpon";
+      if(tile>=27) return "tanki";
+      const s = tile%9+1;
+      if(s>=2&&s<=8&&c[tile-1]&&c[tile+1]) return "kanchan";
+      if((s===3||s===7)&&c[tile-1]&&c[tile-2]) return "penchan";
+      if((s===1||s===4||s===7)&&c[tile+1]&&c[tile+2]) return "penchan";
+      if(s>=2&&s<=8 && ((c[tile-1]&&!c[tile-2]&&c[tile+1])||(c[tile+1]&&!c[tile+2]&&c[tile-1])))
         return "ryanmen";
-    return "ryanmen"; // fallback
-}
-
-/* ---------- CLASSE PLAYER ---------- */
-class Player{
-    constructor(id){
-        this.id=id;
-        this.h=[];this.ct=Array(34).fill(0);
-        this.melds=[];this.disc=[];
-        this.win=false;this.riichi=false;
-        this.lastDrawTile=null;
-        this.defensive=id<=1; // P0,P1 defensivos
+      return "ryanmen";
     }
-    add(t){this.h.push(t);this.ct[t]++;this.lastDrawTile=t;}
-    rm(t){this.h.splice(this.h.indexOf(t),1);this.ct[t]--;}
-    sort(){this.h.sort((a,b)=>a-b);}
-    sh(){return stdShanten(this.ct);}
-    role(){return this.defensive?"Defensivo":"Ofensivo";}
-}
 
-/* ---------- ESTADO DO JOGO VISÍVEL ---------- */
-let wall,wc,P,pos,turn,cur,MAX,riichiActive,safeTiles,autoTimer;
+    /* ---------- CLASSE PLAYER ---------- */
+    class Player {
+      constructor(id){
+        this.id=id;
+        this.h=[]; this.ct=Array(34).fill(0);
+        this.melds=[]; this.disc=[];
+        this.win=false; this.riichi=false;
+        this.lastDrawTile=null;
+        this.defensive = id<=1;
+      }
+      add(t){ this.h.push(t); this.ct[t]++; this.lastDrawTile=t; }
+      rm(t){ this.h.splice(this.h.indexOf(t),1); this.ct[t]--; }
+      sort(){ this.h.sort((a,b)=>a-b); }
+      sh(){ return stdShanten(this.ct); }
+      role(){ return this.defensive?"Defensivo":"Ofensivo"; }
+    }
 
-/* ---------- FUNÇÕES DO JOGO VISÍVEL ---------- */
-function initGame(){
-    wall=[...Array(4).keys()].flatMap(()=>Array.from({length:34},(_,i)=>i)); shuffle(wall);
-    wc=Array(34).fill(4);
-    P=[0,1,2,3].map(i=>new Player(i));
-    pos=0;turn=0;cur=0;MAX=68;riichiActive=false;safeTiles=new Set();
-    for(let d=0;d<13;d++) P.forEach(p=>p.add(draw()));
-    P.forEach(p=>p.sort());
-    logEl.textContent="Partida reiniciada (13 tiles).\n";
-    render(); enableButtons(); autoBtn.textContent="Autoplay ▶";
-    clearInterval(autoTimer);autoTimer=null;
-}
-function draw(){const t=wall[pos++];wc[t]--;return t;}
-function log(msg){logEl.textContent+=msg;logEl.scrollTop=logEl.scrollHeight;}
-function render(){
-    table.innerHTML=P.map(p=>{
+    /* ---------- ESTADO DO JOGO VISÍVEL ---------- */
+    let wall,wc,P,pos,turn,cur,MAX,riichiActive,safeTiles,autoTimer;
+
+    /* ---------- FUNÇÕES DO JOGO VISÍVEL ---------- */
+    function initGame(){
+      wall=[...Array(4).keys()].flatMap(()=>Array.from({length:34},(_,i)=>i));
+      shuffle(wall);
+      wc=Array(34).fill(4);
+      P=[0,1,2,3].map(i=>new Player(i));
+      pos=0; turn=0; cur=0; MAX=68; riichiActive=false; safeTiles=new Set();
+      for(let d=0; d<13; d++) P.forEach(p=>p.add(draw()));
+      P.forEach(p=>p.sort());
+      logEl.textContent="Partida reiniciada (13 tiles).\n";
+      render(); enableButtons(); autoBtn.textContent="Autoplay ▶";
+      clearInterval(autoTimer); autoTimer=null;
+    }
+    function draw(){ const t=wall[pos++]; wc[t]--; return t; }
+    function log(msg){ logEl.textContent+=msg; logEl.scrollTop=logEl.scrollHeight; }
+    function render(){
+      table.innerHTML=P.map(p=>{
         const melds=p.melds.map(m=>`<div class="meld row">${m.tiles.map((t,i)=>span(t,{rot:i===m.rot})).join("")}</div>`).join("");
         return `<div class="player${p.win?" winner":""}">
-            <strong>P${p.id}</strong> <small>(sh: ${p.sh()})</small>
-            <span class="role ${p.defensive?"def":"off"}">${p.role()}</span>
-            ${p.riichi?'<span class="riichi-tag">Riichi!</span>':""}
-            <div class="row hand">${p.h.map(t=>span(t)).join("")}${melds}</div>
-            <div class="row discards">${p.disc.map(t=>span(t,{sm:true})).join("")}</div>
+          <strong>P${p.id}</strong> <small>(sh: ${p.sh()})</small>
+          <span class="role ${p.defensive?"def":"off"}">${p.role()}</span>
+          ${p.riichi?'<span class="riichi-tag">Riichi!</span>':""}
+          <div class="row hand">${p.h.map(t=>span(t)).join("")}${melds}</div>
+          <div class="row discards">${p.disc.map(t=>span(t,{sm:true})).join("")}</div>
         </div>`;
-    }).join("");
-}
-function enableButtons(){next.disabled=false;resetBtn.disabled=false;autoBtn.disabled=false;simulateBtn.disabled=false;}
-function finish(){next.disabled=true;autoBtn.disabled=true;clearInterval(autoTimer);autoTimer=null;autoBtn.textContent="Autoplay ▶";}
-
-/* ---------- DESCARTE ---------- */
-function chooseGenbutsu(pl,sh0){
-    const g=pl.h.find(t=>safeTiles.has(t));
-    if(g===undefined) return null;
-    if(pl.defensive) return pl.h.indexOf(g);
-    pl.ct[g]--;const ns=pl.sh();pl.ct[g]++;
-    return ns<=sh0?pl.h.indexOf(g):null;
-}
-function chooseDiscard(pl){
-    if(pl.riichi) return pl.h.indexOf(pl.lastDrawTile);
-    const sh0=pl.sh();
-    if(riichiActive){
-        const idxG=chooseGenbutsu(pl,sh0);
+      }).join("");
+    }
+    function enableButtons(){ next.disabled=false; resetBtn.disabled=false; autoBtn.disabled=false; simulateBtn.disabled=false; }
+    function finish(){ next.disabled=true; autoBtn.disabled=true; clearInterval(autoTimer); autoTimer=null; autoBtn.textContent="Autoplay ▶"; }
+    function chooseGenbutsu(pl,sh0){
+      const g=pl.h.find(t=>safeTiles.has(t));
+      if(g===undefined) return null;
+      if(pl.defensive) return pl.h.indexOf(g);
+      pl.ct[g]--; const ns=pl.sh(); pl.ct[g]++;
+      return ns<=sh0?pl.h.indexOf(g):null;
+    }
+    function chooseDiscard(pl){
+      if(pl.riichi) return pl.h.indexOf(pl.lastDrawTile);
+      const sh0=pl.sh();
+      if(riichiActive){
+        const idxG = chooseGenbutsu(pl,sh0);
         if(idxG!==null) return idxG;
         if(pl.defensive){
-            const s=pl.h.find(t=>isSuji(t));
-            if(s!==undefined) return pl.h.indexOf(s);
+          const s = pl.h.find(t=>isSuji(t));
+          if(s!==undefined) return pl.h.indexOf(s);
         }
-    }
-    let best=[9,-1,0];
-    pl.h.forEach((t,i)=>{
-        pl.ct[t]--;const ns=pl.sh();const uk=ukeire(pl.ct,ns);
+      }
+      let best=[9,-1,0];
+      pl.h.forEach((t,i)=>{
+        pl.ct[t]--; const ns=pl.sh(); const uk=ukeire(pl.ct,ns);
         if(ns<best[0]||ns===best[0]&&uk>best[1]) best=[ns,uk,i];
         pl.ct[t]++;
-    });
-    return best[2];
-}
+      });
+      return best[2];
+    }
+    function step(){
+      if(turn>=MAX||pos>=wall.length){ finish(); return; }
+      const pl=P[cur];
+      const tile=draw(); pl.add(tile);
+      log(`P${cur} compra ${span(tile)}\n`);
 
-/* ---------- TURNO VISÍVEL ---------- */
-function step(){
-    if(turn>=MAX||pos>=wall.length){finish();return;}
-    const pl=P[cur];
-    const tile=draw();pl.add(tile);
-    log(`P${cur} compra ${span(tile)}\n`);
-
-    if(!pl.riichi&&pl.melds.length===0){
+      if(!pl.riichi&&pl.melds.length===0){
         const shNow=pl.sh();
         if(shNow===0){
-            pl.ct[tile]--;const shAfter=pl.sh();pl.ct[tile]++;
-            if(shAfter===0&&!(riichiActive&&pl.defensive)){pl.riichi=true;riichiActive=true;log(`*** P${cur} declara RICHI! ***\n`);}
+          pl.ct[tile]--; const shAfter=pl.sh(); pl.ct[tile]++;
+          if(shAfter===0&&!(riichiActive&&pl.defensive)){
+            pl.riichi=true; riichiActive=true; log(`*** P${cur} declara RICHI! ***\n`);
+          }
         }
-        if(!pl.riichi&&pl.sh()+1===0&&!(riichiActive&&pl.defensive)){pl.riichi=true;riichiActive=true;log(`*** P${cur} declara RICHI! ***\n`);}
+        if(!pl.riichi&&pl.sh()+1===0&&!(riichiActive&&pl.defensive)){
+          pl.riichi=true; riichiActive=true; log(`*** P${cur} declara RICHI! ***\n`);
+        }
+      }
+
+      if(pl.sh()<0){ win(pl,"TSUMO",tile); return; }
+
+      pl.sort();
+      const idx=chooseDiscard(pl);
+      const disc=pl.h[idx]; pl.rm(disc); pl.disc.push(disc);
+      if(pl.riichi) safeTiles.add(disc);
+      log(`P${cur} descarta ${span(disc)}${pl.riichi?" (riichi)":""}\n`);
+      if(ronCheck(disc,cur)) return;
+
+      render();
+      cur=(cur+1)%4; turn++;
+      if(turn>=MAX||pos>=wall.length){ log("\nSem vencedor.\n"); finish(); }
     }
-
-    if(pl.sh()<0){win(pl,"TSUMO",tile);return;}
-
-    pl.sort();
-    const idx=chooseDiscard(pl);
-    const disc=pl.h[idx];pl.rm(disc);pl.disc.push(disc);
-    if(pl.riichi) safeTiles.add(disc);
-    log(`P${cur} descarta ${span(disc)}${pl.riichi?" (riichi)":""}\n`);
-    if(ronCheck(disc,cur)) return;
-
-    render();
-    cur=(cur+1)%4;turn++;
-    if(turn>=MAX||pos>=wall.length){log("\nSem vencedor.\n");finish();}
-}
-function ronCheck(tile,from){
-    for(const p of P){
+    function ronCheck(tile,from){
+      for(const p of P){
         if(p.id===from||p.win) continue;
-        p.ct[tile]++;if(p.sh()<0){p.h.push(tile);win(p,"RON",tile,from);return true;}p.ct[tile]--;
+        p.ct[tile]++; if(p.sh()<0){ p.h.push(tile); win(p,"RON",tile,from); return true; } p.ct[tile]--;
+      }
+      return false;
     }
-    return false;
-}
-function win(pl,how,tile,from){
-    pl.win=true;render();
-    log(`\n*** P${pl.id} vence por ${how} em ${span(tile)}${from!==undefined?` (por P${from})`:""} ***\n`);
-    log(`Mão: ${P[pl.id].h.map(t=>U[t]).join(" ")}\n`);
-    finish();
-}
-
-/* ---------- BOTÕES ---------- */
-const next=document.getElementById("next"),
-      autoBtn=document.getElementById("auto"),
-      resetBtn=document.getElementById("reset"),
-      simulateBtn=document.getElementById("simulate"),
-      table=document.getElementById("table"),
-      logEl=document.getElementById("log");
-
-next.onclick=step;
-resetBtn.onclick=initGame;
-autoBtn.onclick=()=>{
-    if(autoTimer){clearInterval(autoTimer);autoTimer=null;autoBtn.textContent="Autoplay ▶";}
-    else{
-        autoBtn.textContent="Autoplay ⏸";
-        autoTimer=setInterval(()=>{
-            if(!next.disabled) step();
-            else{clearInterval(autoTimer);autoTimer=null;autoBtn.textContent="Autoplay ▶";}
-        },600);
+    function win(pl,how,tile,from){
+      pl.win=true; render();
+      log(`\n*** P${pl.id} vence por ${how} em ${span(tile)}${from!==undefined?` (por P${from})`:""} ***\n`);
+      log(`Mão: ${P[pl.id].h.map(t=>U[t]).join(" ")}\n`);
+      finish();
     }
-};
-simulateBtn.onclick=()=>simulateGames(1000);
 
-/* ---------- SIMULAÇÕES OFF-SCREEN ---------- */
-function chooseDiscardSim(pl,riichiActive,safeTiles){
-    if(pl.riichi) return pl.h.indexOf(pl.lastDrawTile);
-    const sh0=pl.sh();
-    if(riichiActive){
+    /* ---------- SIMULAÇÕES OFF-SCREEN ---------- */
+    function chooseDiscardSim(pl,riichiActive,safeTiles){
+      if(pl.riichi) return pl.h.indexOf(pl.lastDrawTile);
+      const sh0=pl.sh();
+      if(riichiActive){
         const g=pl.h.find(t=>safeTiles.has(t));
         if(g!==undefined){
-            if(pl.defensive) return pl.h.indexOf(g);
-            pl.ct[g]--;const ns=pl.sh();pl.ct[g]++;
-            if(ns<=sh0) return pl.h.indexOf(g);
+          if(pl.defensive) return pl.h.indexOf(g);
+          pl.ct[g]--; const ns=pl.sh(); pl.ct[g]++;
+          if(ns<=sh0) return pl.h.indexOf(g);
         }
         if(pl.defensive){
-            const s=pl.h.find(t=>isSuji(t));
-            if(s!==undefined) return pl.h.indexOf(s);
+          const s=pl.h.find(t=>isSuji(t));
+          if(s!==undefined) return pl.h.indexOf(s);
         }
-    }
-    let best=[9,-1,0];
-    pl.h.forEach((t,i)=>{
-        pl.ct[t]--;const ns=pl.sh();const uk=ukeire(pl.ct,ns);
+      }
+      let best=[9,-1,0];
+      pl.h.forEach((t,i)=>{
+        pl.ct[t]--; const ns=pl.sh(); const uk=ukeire(pl.ct,ns);
         if(ns<best[0]||ns===best[0]&&uk>best[1]) best=[ns,uk,i];
         pl.ct[t]++;
-    });
-    return best[2];
-}
+      });
+      return best[2];
+    }
 
-function simulateOneGame(){
-    let wall=[...Array(4).keys()].flatMap(()=>Array.from({length:34},(_,i)=>i)); shuffle(wall);
-    let wc=Array(34).fill(4);
-    let players=[0,1,2,3].map(i=>new Player(i));
-    let pos=0,turn=0,MAX=68,riichiActive=false,safeTiles=new Set();
-    const drawSim=()=>{const t=wall[pos++];wc[t]--;return t;};
+    function simulateOneGame(){
+      let wall=[...Array(4).keys()].flatMap(()=>Array.from({length:34},(_,i)=>i));
+      shuffle(wall);
+      let wc=Array(34).fill(4);
+      let players=[0,1,2,3].map(i=>new Player(i));
+      let pos=0, turn=0, MAX=68, riichiActive=false, safeTiles=new Set();
+      const drawSim = ()=>{ const t=wall[pos++]; wc[t]--; return t; };
 
-    /* --- contadores descartes até tenpai --- */
-    let discardsMade=[0,0,0,0],discardsTenpai=[null,null,null,null];
+      let discardsMade=[0,0,0,0], discardsTenpai=[null,null,null,null];
+      let waitsRon=Array(5).fill(0), waitsTsumo=Array(5).fill(0), waitsTenpai=Array(5).fill(0);
 
-    for(let d=0;d<13;d++) players.forEach(p=>p.add(drawSim()));
-    players.forEach(p=>{p.sort();if(p.sh()===0) discardsTenpai[p.id]=0;});
-    let cur=0;
-
-    let waitsRon=Array(5).fill(0),waitsTsumo=Array(5).fill(0);
-
-    while(turn<MAX && pos<wall.length){
-        const pl=players[cur];
-        const tile=drawSim();pl.add(tile);
-
-        if(!pl.riichi&&pl.melds.length===0){
-            const shNow=pl.sh();
-            if(shNow===0){
-                pl.ct[tile]--;const shAfter=pl.sh();pl.ct[tile]++;
-                if(shAfter===0&&!(riichiActive&&pl.defensive)){pl.riichi=true;riichiActive=true;}
+      // distribuição inicial e contagem de tenpai inicial
+      for(let d=0; d<13; d++) players.forEach(p=>p.add(drawSim()));
+      players.forEach(p=>{
+        p.sort();
+        if(p.sh()===0){
+          discardsTenpai[p.id]=0;
+          // conta tenpai por tipo de espera
+          for(let t=0; t<34; t++){
+            if(wc[t]===0) continue;
+            p.ct[t]++;
+            if(p.sh()<0){
+              const w=classifyWait(p.h,t);
+              waitsTenpai[WAITS.indexOf(w)]++;
             }
-            if(!pl.riichi&&pl.sh()+1===0&&!(riichiActive&&pl.defensive)){pl.riichi=true;riichiActive=true;}
+            p.ct[t]--;
+          }
         }
-        /* vitória por tsumo */
+      });
+
+      let cur=0;
+      while(turn<MAX && pos<wall.length){
+        const pl=players[cur];
+        const tile=drawSim(); pl.add(tile);
+
+        // declaração de riichi
+        if(!pl.riichi&&pl.melds.length===0){
+          const shNow=pl.sh();
+          if(shNow===0){
+            pl.ct[tile]--; const shAfter=pl.sh(); pl.ct[tile]++;
+            if(shAfter===0&&!(riichiActive&&pl.defensive)){
+              pl.riichi=true; riichiActive=true;
+            }
+          }
+          if(!pl.riichi&&pl.sh()+1===0&&!(riichiActive&&pl.defensive)){
+            pl.riichi=true; riichiActive=true;
+          }
+        }
+
+        // vitória por tsumo
         if(pl.sh()<0){
-            const w=classifyWait(pl.h,tile);waitsTsumo[WAITS.indexOf(w)]++;
-            return{winner:pl.id,dealIn:null,discardsTenpai,waitsRon,waitsTsumo};
+          const w=classifyWait(pl.h,tile);
+          waitsTsumo[WAITS.indexOf(w)]++;
+          waitsTenpai[WAITS.indexOf(w)]++;
+          return { winner:pl.id, dealIn:null, discardsTenpai, waitsRon, waitsTsumo, waitsTenpai };
         }
 
         pl.sort();
-        const discIdx=chooseDiscardSim(pl,riichiActive,safeTiles);
-        const disc=pl.h[discIdx];pl.rm(disc);
+        const discIdx = chooseDiscardSim(pl,riichiActive,safeTiles);
+        const disc = pl.h[discIdx]; pl.rm(disc);
 
-        /* descartar contagem */
+        // contagem de descartes até tenpai
         discardsMade[pl.id]++;
-        if(discardsTenpai[pl.id]===null && pl.sh()===0) discardsTenpai[pl.id]=discardsMade[pl.id];
+        if(discardsTenpai[pl.id]===null && pl.sh()===0){
+          discardsTenpai[pl.id]=discardsMade[pl.id];
+          // conta tenpai por tipo de espera após entrar em tenpai
+          for(let t=0; t<34; t++){
+            if(wc[t]===0) continue;
+            pl.ct[t]++;
+            if(pl.sh()<0){
+              const w=classifyWait(pl.h,t);
+              waitsTenpai[WAITS.indexOf(w)]++;
+            }
+            pl.ct[t]--;
+          }
+        }
 
         if(pl.riichi) safeTiles.add(disc);
 
-        /* cheque Ron */
+        // cheque Ron
         for(const opp of players){
-            if(opp.id===cur) continue;
-            opp.ct[disc]++;if(opp.sh()<0){
-                opp.h.push(disc);
-                const w=classifyWait(opp.h,disc);waitsRon[WAITS.indexOf(w)]++;
-                return{winner:opp.id,dealIn:cur,discardsTenpai,waitsRon,waitsTsumo};
-            }
-            opp.ct[disc]--;
+          if(opp.id===cur) continue;
+          opp.ct[disc]++;
+          if(opp.sh()<0){
+            opp.h.push(disc);
+            const w=classifyWait(opp.h,disc);
+            waitsRon[WAITS.indexOf(w)]++;
+            waitsTenpai[WAITS.indexOf(w)]++;
+            return { winner:opp.id, dealIn:cur, discardsTenpai, waitsRon, waitsTsumo, waitsTenpai };
+          }
+          opp.ct[disc]--;
         }
-        cur=(cur+1)%4;turn++;
+
+        cur=(cur+1)%4;
+        turn++;
+      }
+
+      return { winner:null, dealIn:null, discardsTenpai, waitsRon, waitsTsumo, waitsTenpai };
     }
-    return {winner:null,dealIn:null,discardsTenpai,waitsRon,waitsTsumo};
-}
 
-function simulateGames(n=10){
-    let wins=Array(4).fill(0),dealIns=Array(4).fill(0),completed=0;
-    let tenpaiTotals=[0,0,0,0],tenpaiCounts=[0,0,0,0];
-    let waitsRonTot=Array(5).fill(0),waitsTsumoTot=Array(5).fill(0);
+    function simulateGames(n=100){
+      let wins=[0,0,0,0], dealIns=[0,0,0,0], completed=0;
+      let tenpaiTotals=[0,0,0,0], tenpaiCounts=[0,0,0,0];
+      let waitsRonTot=Array(5).fill(0), waitsTsumoTot=Array(5).fill(0), waitsTenpaiTot=Array(5).fill(0);
 
-    for(let i=0;i<n;i++){
-        const r=simulateOneGame();
-        if(r.winner!==null){wins[r.winner]++;completed++;}
+      for(let i=0;i<n;i++){
+        const r = simulateOneGame();
+        if(r.winner!==null){ wins[r.winner]++; completed++; }
         if(r.dealIn!==null) dealIns[r.dealIn]++;
-        r.discardsTenpai.forEach((v,p)=>{if(v!==null){tenpaiTotals[p]+=v;tenpaiCounts[p]++;}});
-        r.waitsRon.forEach((v,j)=>waitsRonTot[j]+=v);
-        r.waitsTsumo.forEach((v,j)=>waitsTsumoTot[j]+=v);
-    }
+        r.discardsTenpai.forEach((v,p)=>{ if(v!==null){ tenpaiTotals[p]+=v; tenpaiCounts[p]++; } });
+        r.waitsRon.forEach((v,j)=> waitsRonTot[j]+=v);
+        r.waitsTsumo.forEach((v,j)=> waitsTsumoTot[j]+=v);
+        r.waitsTenpai.forEach((v,j)=> waitsTenpaiTot[j]+=v);
+      }
 
-    // — depois que a simulação termina —
-    const totalRon   = waitsRonTot.reduce((a, b) => a + b, 0);
-    const totalTsumo = waitsTsumoTot.reduce((a, b) => a + b, 0);
+      const totalRon    = waitsRonTot.reduce((a,b)=>a+b,0);
+      const totalTsumo = waitsTsumoTot.reduce((a,b)=>a+b,0);
+      const totalTenpai = waitsTenpaiTot.reduce((a,b)=>a+b,0);
 
-    const pct = (v, total) => total ? (v / total * 100).toFixed(1) + "%" : "0.0%";
-    const fmtArr = (arr, total) =>
-        WAITS.map((w, i) => `${w[0].toUpperCase() + w.slice(1)} ${pct(arr[i], total)}`).join(" | ");
+      const pct = (v,total)=> total? (v/total*100).toFixed(1)+"%" : "0.0%";
+      const fmtArr = (arr,total)=> WAITS.map((w,i)=>`${w[0].toUpperCase()+w.slice(1)} ${pct(arr[i],total)}`).join(" | ");
 
-    let out = `--- Resultado da Simulação (${n} jogos) ---\n`;
-    out += `Jogados até vitória: ${completed} | Ryuukyoku: ${n - completed}\n\n`;
-
-    for (let i = 0; i < 4; i++) {
-        const winRate    = completed ? (wins[i] / completed * 100).toFixed(1) : "0.0";
-        const dealInRate = (dealIns[i] / n * 100).toFixed(1);
-        const avgTenpai  = tenpaiCounts[i] ? (tenpaiTotals[i] / tenpaiCounts[i]).toFixed(1) : "-";
+      let out = `--- Resultado da Simulação (${n} jogos) ---\n`;
+      out += `Jogados até vitória: ${completed} | Ryuukyoku: ${n-completed}\n\n`;
+      for(let i=0;i<4;i++){
+        const winRate    = completed? (wins[i]/completed*100).toFixed(1) : "0.0";
+        const dealInRate = (dealIns[i]/n*100).toFixed(1);
+        const avgTenpai  = tenpaiCounts[i]? (tenpaiTotals[i]/tenpaiCounts[i]).toFixed(1) : "-";
         out += `P${i}: Win ${winRate}% | Deal-In ${dealInRate}% | Média de descartes até tenpai ${avgTenpai}\n`;
+      }
+
+      out += `\n--- Estatísticas de Esperas ---\n`;
+      out += `Ron  : ${fmtArr(waitsRonTot,totalRon)}\n`;
+      out += `Tsumo: ${fmtArr(waitsTsumoTot,totalTsumo)}\n`;
+      out += `Tenpai: ${fmtArr(waitsTenpaiTot,totalTenpai)}\n`;
+
+      // Proporção de vitórias vs tenpai
+      const winsByWait = waitsRonTot.map((v,i)=> v + waitsTsumoTot[i]);
+      out += `\n--- Proporção de Vitórias em relação ao Tenpai ---\n`;
+      out += WAITS.map((w,i)=>{
+        const ten = waitsTenpaiTot[i];
+        const win = winsByWait[i];
+        const rate = ten? (win/ten*100).toFixed(1)+"%" : "0.0%";
+        return `${w[0].toUpperCase()+w.slice(1)}: ${win}/${ten} (${rate})`;
+      }).join(" | ") + "\n";
+
+      logEl.style.display = 'block';
+      logEl.textContent = out;
     }
 
-    out += "\n--- Estatísticas de Esperas ---\n";
-    out += `Ron  : ${fmtArr(waitsRonTot,   totalRon)}\n`;
-    out += `Tsumo: ${fmtArr(waitsTsumoTot, totalTsumo)}\n`;
+    /* ---------- INICIALIZAÇÃO ---------- */
+    const next       = document.getElementById("next"),
+          autoBtn    = document.getElementById("auto"),
+          resetBtn   = document.getElementById("reset"),
+          simulateBtn= document.getElementById("simulate"),
+          table      = document.getElementById("table"),
+          logEl      = document.getElementById("log");
 
-    logEl.style.display = 'block';
-    logEl.textContent = out;
+    next.onclick      = step;
+    resetBtn.onclick  = initGame;
+    autoBtn.onclick   = ()=>{
+      if(autoTimer){ clearInterval(autoTimer); autoTimer=null; autoBtn.textContent="Autoplay ▶"; }
+      else {
+        autoBtn.textContent="Autoplay ⏸";
+        autoTimer=setInterval(()=>{
+          if(!next.disabled) step();
+          else { clearInterval(autoTimer); autoTimer=null; autoBtn.textContent="Autoplay ▶"; }
+        },600);
+      }
+    };
+    simulateBtn.onclick = ()=>simulateGames(5000);
 
-}
-
-/* ---------- START ---------- */
-initGame();
-</script>
+    initGame();
+  </script>
 </body>
 </html>
